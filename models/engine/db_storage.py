@@ -4,10 +4,16 @@
 This module contains the database storage class that helps to store date
 in a relational database
 """
-import sys
-from base_model import Base
+import os
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from models.amenity import Amenity
+from models.base_model import BaseModel, Base
+from models.state import State
+from models.city import City
+from models.place import Place
+from models.review import Review
+from models.user import User
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 
 class DBStorage():
@@ -16,19 +22,20 @@ class DBStorage():
     """
     __engine = None
     __session = None
+
     def __init__(self):
         """initialize a new database session"""
         user, pword, host, db, env = (
-            sys.getenv(HBNB_MYSQL_USER),
-            sys.getenv(HBNB_MYSQL_PWD),
-            sys.getenv(HBNB_MYSQL_HOST),
-            sys.getenv(HBNB_MYSQL_DB),
-            sys.getenv(HBNB_ENV)
+            os.getenv("HBNB_MYSQL_USER"),
+            os.getenv("HBNB_MYSQL_PWD"),
+            os.getenv("HBNB_MYSQL_HOST"),
+            os.getenv("HBNB_MYSQL_DB"),
+            os.getenv("HBNB_ENV")
         )
-        self.__engine = create_engine("mysql+mysqldb://{}:{}@{}/{}"\
+        self.__engine = create_engine("mysql+mysqldb://{}:{}@{}/{}"
                                       .format(user, pword, host, db),
                                       pool_pre_ping=True)
-        Session = sessionmaker(bind=engine)
+        Session = sessionmaker(bind=self.__engine)
         self.__session = Session()
         if env == "test":
             Base.metadata.drop_all()
@@ -44,9 +51,9 @@ class DBStorage():
                 key = "{}.{}".format(cls.__name__, obj.id)
                 result[key] = obj
         else:
-            for objs in self.__session.query(User, State, City, Amenity, Place,
-                                             Amenity).all():
-                for obj in objs:
+            classes = [User, State, City, Amenity, Place, Amenity]
+            for cls in classes:
+                for obj in self.__session.query(cls).all():
                     key = "{}.{}".format(type(obj).__name__, obj.id)
                     result[key] = obj
         return result
@@ -57,8 +64,23 @@ class DBStorage():
         """
         self.__session.add(obj)
 
-    def save(self, obj):
+    def save(self):
         """
         Commit all changes of the current database session
         """
-        self.__session.commit(obj)
+        self.__session.commit()
+
+    def delete(self, obj=None):
+        """
+        delete from the current database session obj if not None
+        """
+        if obj:
+            self.__session.delete(obj)
+
+    def reload(self):
+        """
+        quit and restart a session
+        """
+        Base.metadata.create_all(self.__engine)
+        Session = sessionmaker(self.__engine, expire_on_commit=False)
+        self.__session = Session()
