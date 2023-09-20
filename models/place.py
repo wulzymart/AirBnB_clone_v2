@@ -2,9 +2,18 @@
 """ Place Module for HBNB project """
 import models
 import os
-from sqlalchemy import Column, String, Integer, ForeignKey, Float
+from sqlalchemy import Column, String, Integer, ForeignKey, Float, Table
 from models.base_model import BaseModel, Base
 from sqlalchemy.orm import relationship
+
+
+place_amenity = Table("place_amenity", Base.metadata,
+                      Column("place_id", String(60),
+                             ForeignKey("places.id"),
+                             primary_key=True, nullable=False),
+                      Column("amenity_id", String(60),
+                             ForeignKey("amenities.id"),
+                             primary_key=True, nullable=False))
 
 
 class Place(BaseModel, Base):
@@ -25,6 +34,9 @@ class Place(BaseModel, Base):
     if os.getenv("HBNB_TYPE_STORAGE") == "db":
         reviews = relationship("Review", backref="place",
                                cascade="all, delete")
+        amenities = relationship("Amenity", secondary=place_amenity,
+                                 viewonly=False,
+                                 backref="place_amenities")
 
     else:
         @property
@@ -34,4 +46,24 @@ class Place(BaseModel, Base):
             instances with place_id equals to the current Place.id
             """
             objs = models.storage.all(type(self))
-            return [v for k, v in objs if v.place_id == self.id]
+            return [v for k, v in objs.items() if v.place_id == self.id]
+
+        @property
+        def amenities(self):
+            """
+            Getter attribute amenities that returns the list of
+            Amenity instances based on the attribute amenity_ids that
+            contains all Amenity.id linked to the Place
+            """
+            objs = models.storage.all(Amenity)
+            return [v for k, v in objs.items() if v.amenities_id
+                    in self.amenity_ids]
+
+        @amenities.setter
+        def amenities(self, amenities_obj):
+            """
+            Setter attribute amenities that handles append method for
+            adding an Amenity.id to the attribute amenity_ids
+            """
+            if type(amenities_obj).__name__ == "Amenity":
+                self.amenity_ids.append(amenities_obj.id)
