@@ -1,72 +1,54 @@
 # sets up your web servers for the deployment of web_static
-
-$HTML=\
-'<html>
+$contents = "<html>
   <head>
   </head>
   <body>
     Holberton School
   </body>
-</html>'
+</html>"
 
-exec {'update system':
-  command => '/usr/bin/apt-get update',
+exec { 'Install and configure nginx':
+  command  => "sudo apt-get update -y && 
+               sudo apt-get install nginx -y && 
+               sudo mkdir -p /data/web_static/releases/test/ && 
+               sudo mkdir -p /data/web_static/shared/ && 
+               echo '${contents}' > /data/web_static/releases/test/index.html && 
+               sudo ln -sf /data/web_static/releases/test/ /data/web_static/current && 
+               sudo chown -R ubuntu:ubuntu /data/ &&
+               sudo rm -rf /etc/nginx/sites-enabled/default",
+  provider => 'shell',
+  path     => '/usr/bin:/bin:/usr/sbin:/sbin'
 }
 
--> package {'nginx':
-  ensure => 'present',
+file { '/etc/nginx/sites-enabled/default':
+  ensure  => present,
+  content => "
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    server_name _;
+
+     root /var/www/html;
+
+    server_name _;
+        add_header X-Served-By $hostname;
+        rewrite ^/redirect_me / permanent;
+
+    location / {
+        try_files \$uri \$uri/ =404;
+    }
+
+    location /hbnb_static {
+        alias /data/web_static/current/;
+    }
+}
+",
+  require => Exec['Install and configure nginx'],
 }
 
--> exec {'create directories':
-  command => 'sudo mkdir -p /data/web_static/releases/test',
-  path => '/usr/bin:/usr/sbin:/bin'
-  provider => 'shell'
-}
-
--> exec {'create directories 2':
-  command => 'sudo mkdir /data/web_static/shared',
-  path => '/usr/bin:/usr/sbin:/bin'
-  provider => 'shell'
-}
-
--> file { '/data/web_static/releases/test/index.html':
-  ensure  => 'present',
-  content => "$HTML"
-}
-
--> exec {'create directories 2':
-  command => 'sudo ln -s /data/web_static/releases/test/ /data/web_static/current',
-  path => '/usr/bin:/usr/sbin:/bin'
-  provider => 'shell'
-}
-
--> exec {'create directories 2':
-  command => 'sudo chown -R ubuntu:ubuntu /data/',
-  path => '/usr/bin:/usr/sbin:/bin'
-  provider => 'shell'
-}
-
--> exec {'create directories 2':
-  command => 'sudo chown -R ubuntu:ubuntu /data/',
-  path => '/usr/bin:/usr/sbin:/bin'
-  provider => 'shell'
-}
-
--> exec {'create directories 2':
-  command => "sudo sed -i '/listen 80 default_server/a \\tlocation /hbnb_static {\n\t\talias /data/web_static/current/;\n\t}' /etc/nginx/sites-enabled/default"
-  path => '/usr/bin:/usr/sbin:/bin'
-  provider => 'shell'
-}
-
--> exec {'create directories 2':
-  command => 'sudo ufw allow 'Nginx Full'',
-  path => '/usr/bin:/usr/sbin:/bin'
-  provider => 'shell'
-}
-
--> exec {'create directories 2':
+exec { 'Restart Nginx':
   command => 'sudo service nginx restart',
-  path => '/usr/bin:/usr/sbin:/bin'
-  provider => 'shell'
+  path    => '/usr/bin:/bin:/usr/sbin:/sbin',
+  require => [File['/etc/nginx/sites-enabled/default'], Exec['Install and configure nginx']],
 }
-
