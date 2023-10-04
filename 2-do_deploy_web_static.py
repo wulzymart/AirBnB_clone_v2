@@ -29,7 +29,8 @@ def do_deploy(archive_path):
         run(f"sudo rm /tmp/{name_with_no_ext}.tgz")
         run(f"sudomv /data/web_static/releases/{name_with_no_ext}/web_static/*\
  /data/web_static/releases/{name_with_no_ext}/")
-        run(f"sudo rm -rf /data/web_static/releases/{name_with_no_ext}/web_static")
+        run(f"sudo rm -rf /data/web_static/releases/{\
+            name_with_no_ext}/web_static")
         run(f"sudo unlink /data/web_static/current")
         run(f"sudo ln -s /data/web_static/releases/{name_with_no_ext}\
  /data/web_static/current")
