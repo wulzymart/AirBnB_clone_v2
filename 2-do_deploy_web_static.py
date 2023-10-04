@@ -26,10 +26,15 @@ def do_pack():
 
 def do_deploy(archive_path):
     """distributes an archive to your web servers"""
+    from os import path
+
     if not archive_path:
         return False
+
     name_with_no_ext = archive_path.split('.')[0].split("/")[1]
     try:
+        if not path.exists(archive_path):
+            return False
         put(local_path=archive_path, remote_path="/tmp/")
         run(f"mkdir -p /data/web_static/releases/{name_with_no_ext}")
         run(f"tar -xzf /tmp/{name_with_no_ext}.tgz -C \
