@@ -62,6 +62,11 @@ def deploy():
 def do_clean(number=0):
     """removes outdated versions"""
     number = 1 if number == 0 else number
+    try:
+        number = int(number)
+    except Exception as e:
+        return False
+
     from os import listdir, remove
     versions = sorted(listdir("versions"))
     if number >= len(versions):
