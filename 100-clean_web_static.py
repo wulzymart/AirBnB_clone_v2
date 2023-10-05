@@ -61,27 +61,16 @@ def deploy():
 
 def do_clean(number=0):
     """removes outdated versions"""
-    number = 1 if number == 0 else number
-    try:
-        number = int(number)
-    except Exception as e:
-        return False
+    from os import listdir
+    number = 1 if int(number) == 0 else int(number)
 
-    from os import listdir, remove
     versions = sorted(listdir("versions"))
-    if number >= len(versions):
-        return True
-    for i in range(number):
-        versions.pop(i)
-    for file_name in versions:
-        remove(f"versions/{file_name}")
+    [versions.pop() for i in range(number)]
+    with lcd("versions"):
+        [local(f"rm ./{_}") for _ in versions]
 
-    # for servers
     with cd("/data/web_static/releases"):
-        versions = run("ls -t")
-        versions = versions.split()
-        versions = [_ for _ in versions if "web_static_" in _]
-        if number >= len(versions):
-            return True
-        [versions.pop(i) for i in range(number)]
-        [run(f"rm -rf ./{folder}") for folder in versions]
+        versions = run("ls -tr").split()
+        versions = [a for a in versions if "web_static_" in a]
+        [versions.pop() for i in range(number)]
+        [run(f"rm -rf ./{_}") for _ in versions]
