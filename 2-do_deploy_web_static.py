@@ -3,8 +3,6 @@
 
 
 from fabric.api import *
-from time import strftime
-from datetime import date
 from os import path
 
 env.hosts = ['100.26.255.19', '54.237.2.219']
