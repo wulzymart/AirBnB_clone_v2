@@ -11,37 +11,41 @@ env.user = 'ubuntu'
 env.key_filename = '~/.ssh/school'
 
 
+def do_pack():
+    """generates tar gz from web-static"""
+    file_name = f"web_static_{strftime('%Y%m%d%H%M%S')}.tgz"
+    try:
+        local("mkdir -p versions")
+        res = local(f"tar -czvf versions/{file_name} web_static/")
+
+        return f"versions/{file_name}" if res.succeeded else None
+
+    except Exception as e:
+        return None
+
+
 def do_deploy(archive_path):
-        """deploys a compressed webpack on the web
-        """
-        try:
-                if not (path.exists(archive_path)):
-                        return False
+    """distributes an archive to your web servers"""
+    from os import path
 
-                put(archive_path, '/tmp/')
+    if not archive_path:
+        return False
 
-                timestamp = archive_path[-18:-4]
-                run('sudo mkdir -p /data/web_static/\
-releases/web_static_{}/'.format(timestamp))
-
-                run('sudo tar -xzf /tmp/web_static_{}.tgz -C \
-/data/web_static/releases/web_static_{}/'
-                    .format(timestamp, timestamp))
-
-                run('sudo rm /tmp/web_static_{}.tgz'.format(timestamp))
-
-                run('sudo mv /data/web_static/releases/web_static_{}/web_static/* \
-/data/web_static/releases/web_static_{}/'.format(timestamp, timestamp))
-
-                run('sudo rm -rf /data/web_static/releases/\
-web_static_{}/web_static'
-                    .format(timestamp))
-
-                run('sudo rm -rf /data/web_static/current')
-
-                run('sudo ln -s /data/web_static/releases/\
-web_static_{}/ /data/web_static/current'.format(timestamp))
-        except:
-                return False
-
+    name_with_no_ext = archive_path.split('.')[0].split("/")[1]
+    try:
+        if not path.exists(archive_path):
+            return False
+        put(local_path=archive_path, remote_path="/tmp/")
+        run(f"mkdir -p /data/web_static/releases/{name_with_no_ext}")
+        run(f"tar -xzf /tmp/{name_with_no_ext}.tgz -C \
+ /data/web_static/releases/{name_with_no_ext}/")
+        run(f"rm /tmp/{name_with_no_ext}.tgz")
+        run(f"mv /data/web_static/releases/{name_with_no_ext}/web_static/*\
+ /data/web_static/releases/{name_with_no_ext}/")
+        run(f"rm -rf /data/web_static/releases/{name_with_no_ext}/web_static")
+        run(f"unlink /data/web_static/current")
+        run(f"ln -s /data/web_static/releases/{name_with_no_ext}\
+ /data/web_static/current")
         return True
+    except Exception as e:
+        return False
