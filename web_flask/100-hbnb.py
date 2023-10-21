@@ -4,6 +4,8 @@
 
 from models import storage
 from models.state import State
+from models.amenity import Amenity
+from models.place import Place
 from flask import Flask, render_template
 
 
@@ -11,18 +13,16 @@ app = Flask(__name__)
 
 
 # Define routes
-@app.route('/states', strict_slashes=False)
-@app.route('/states/<id>', strict_slashes=False)
-def handle_states(id=None):
+@app.route('/hbnb', strict_slashes=False)
+def handle_filters(id=None):
     """displays states list"""
 
     states = storage.all(State).values()
-    try:
-        state = [state for state in states if state.id == id][0]
-    except Exception as e:
-        state = None
+    amenities = storage.all(Amenity).values()
+    places = storage.all(Place).values()
 
-    return render_template("9-states.html", states=states, state=state, id=id)
+    return render_template("100-hbnb.html", states=states, amenities=amenities,
+                           places=places)
 
 
 @app.teardown_appcontext

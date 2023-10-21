@@ -27,7 +27,6 @@
     width: 25%;
     float: left;
     padding-top: 15px;
-    color: black;
 }
 .filters .locations {
     border-right: 1px solid #DDDDDD;
@@ -47,6 +46,7 @@
 }
 .popover {
     position: relative;
+    height:300px;
     display: none;
     top: 18px;
     padding: 20px 0;
@@ -54,9 +54,11 @@
     border: 1px solid #DDDDDD;
     border-radius: 4px;
     list-style-type: none;
+    overflow-y: scroll;
 }
 .popover ul {
     list-style-type: none;
+    margin-bottom: 5px;
 }
 .popover h2 {
     font-size: 16px;
@@ -69,33 +71,5 @@
 }
 .amenities:hover .popover,
 .locations:hover .popover {
-    display: block;
+ display: block;
 }
-
-@media screen and (max-width: 600px){
-    .filters {
-        background-color: white;
-        width: 80%;
-        margin: 20px auto;
-        height: fit-content;
-        border: none;
-        border-radius: 4px;
-        padding: 10px 5px;
-
-    }
-    .filters button {
-        float: none;
-        width: 100%;
-    }
-    .filters .locations,
-    .filters .amenities {
-        height: 100%;
-        width: 100%;
-        padding: 15px 0;
-        border: 1px solid #DDDDDD;
-        border-radius: 4px;
-        margin-top: 10px;
-    }
-    
-}
-

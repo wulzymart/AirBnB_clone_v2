@@ -34,6 +34,7 @@ def handle_python(text="is cool"):
     """handles the python route"""
     return f"Python {text.replace('_', ' ')}"
 
+
 @app.route("/number/<int:n>", strict_slashes=False)
 def handle_num(n):
     """handles the n route"""
